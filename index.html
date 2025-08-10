@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Globe</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            font-family: sans-serif;
+        }
+        #ui label, #ui input, #ui button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <label for="lat">Latitude:</label>
+        <input type="number" id="lat" placeholder="e.g., 34.05" min="-90" max="90">
+        <label for="lon">Longitude:</label>
+        <input type="number" id="lon" placeholder="e.g., -118.24" min="-180" max="180">
+        <button id="plot-button">Plot Marker</button>
+    </div>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/"
+      }
+    }
+    </script>
+    <script type="module" src="/main.js"></script>
+</body>
+</html>
