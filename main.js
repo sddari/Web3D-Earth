@@ -37,40 +37,70 @@ scene.add(directionalLight);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// --- Marker Logic ---
-const latInput = document.getElementById('lat');
-const lonInput = document.getElementById('lon');
+// --- Plotting Logic ---
+const lat1Input = document.getElementById('lat1');
+const lon1Input = document.getElementById('lon1');
+const lat2Input = document.getElementById('lat2');
+const lon2Input = document.getElementById('lon2');
 const plotButton = document.getElementById('plot-button');
 
-let marker;
+let marker1, marker2, curveLine;
 const R = 2; // Globe radius
 
-function plotMarker(lat, lon) {
+function getPositionFromLatLon(lat, lon) {
+    const latRad = lat * (Math.PI / 180);
+    const lonRad = -lon * (Math.PI / 180);
+    const x = R * Math.cos(latRad) * Math.cos(lonRad);
+    const y = R * Math.sin(latRad);
+    const z = R * Math.cos(latRad) * Math.sin(lonRad);
+    return new THREE.Vector3(x, y, z);
+}
+
+function plotPoint(position, isFirstMarker) {
+    let marker = isFirstMarker ? marker1 : marker2;
     if (!marker) {
-        const markerGeometry = new THREE.SphereGeometry(0.05, 20, 20);
+        const markerGeometry = new THREE.SphereGeometry(0.025, 20, 20);
         const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         marker = new THREE.Mesh(markerGeometry, markerMaterial);
+        if (isFirstMarker) marker1 = marker;
+        else marker2 = marker;
         scene.add(marker);
     }
+    marker.position.copy(position);
+}
 
-    const latRad = lat * (Math.PI / 180);
-    const lonRad = -lon * (Math.PI / 180); // Negate longitude for correct mapping
+function drawCurve(p1, p2) {
+    if (curveLine) {
+        scene.remove(curveLine);
+    }
+    const midpoint = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+    midpoint.normalize().multiplyScalar(R * 1.1);
 
-    // Convert lat/lon to 3D coordinates
-    marker.position.x = R * Math.cos(latRad) * Math.cos(lonRad);
-    marker.position.y = R * Math.sin(latRad);
-    marker.position.z = R * Math.cos(latRad) * Math.sin(lonRad);
+    const curve = new THREE.QuadraticBezierCurve3(p1, midpoint, p2);
+    const points = curve.getPoints(50);
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+    curveLine = new THREE.Line(geometry, material);
+    scene.add(curveLine);
 }
 
 plotButton.addEventListener('click', () => {
-    const lat = parseFloat(latInput.value);
-    const lon = parseFloat(lonInput.value);
+    const lat1 = parseFloat(lat1Input.value);
+    const lon1 = parseFloat(lon1Input.value);
+    const lat2 = parseFloat(lat2Input.value);
+    const lon2 = parseFloat(lon2Input.value);
 
-    if (!isNaN(lat) && !isNaN(lon)) {
-        plotMarker(lat, lon);
-    } else {
-        alert("Please enter valid latitude and longitude.");
+    if ([lat1, lon1, lat2, lon2].some(isNaN)) {
+        alert("Please enter valid coordinates for both points.");
+        return;
     }
+
+    const pos1 = getPositionFromLatLon(lat1, lon1);
+    const pos2 = getPositionFromLatLon(lat2, lon2);
+
+    plotPoint(pos1, true);
+    plotPoint(pos2, false);
+    drawCurve(pos1, pos2);
 });
 
 
