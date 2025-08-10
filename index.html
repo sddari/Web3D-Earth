@@ -18,23 +18,36 @@
             font-family: sans-serif;
         }
         #ui label, #ui input, #ui button {
-            margin: 5px;
+            margin: 2px;
+        }
+        .point-group {
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
     <div id="ui">
-        <b>Point 1</b><br>
-        <label for="lat1">Latitude:</label>
-        <input type="number" id="lat1" placeholder="e.g., 40.71" value="40.71"><br>
-        <label for="lon1">Longitude:</label>
-        <input type="number" id="lon1" placeholder="e.g., -74.00" value="-74.00"><br>
-        <b>Point 2</b><br>
-        <label for="lat2">Latitude:</label>
-        <input type="number" id="lat2" placeholder="e.g., 34.05" value="34.05"><br>
-        <label for="lon2">Longitude:</label>
-        <input type="number" id="lon2" placeholder="e.g., -118.24" value="-118.24"><br>
-        <button id="plot-button">Plot Curve</button>
+        <div id="points-container">
+            <div class="point-group">
+                <b>Point 1</b><br>
+                <label>Lat:</label>
+                <input type="number" class="lat-input" placeholder="e.g., 40.71" value="40.71">
+                <label>Lon:</label>
+                <input type="number" class="lon-input" placeholder="e.g., -74.00" value="-74.00">
+            </div>
+            <div class="point-group">
+                <b>Point 2</b><br>
+                <label>Lat:</label>
+                <input type="number" class="lat-input" placeholder="e.g., 34.05" value="34.05">
+                <label>Lon:</label>
+                <input type="number" class="lon-input" placeholder="e.g., -118.24" value="-118.24">
+            </div>
+        </div>
+        <button id="add-point-button">Add Point</button>
+        <hr>
+        <button id="plot-route-button">Plot Route</button>
     </div>
 
     <script type="importmap">

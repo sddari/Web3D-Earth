@@ -6,7 +6,7 @@ const scene = new THREE.Scene();
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 5;
+camera.position.z = 7;
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -38,13 +38,48 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
 // --- Plotting Logic ---
-const lat1Input = document.getElementById('lat1');
-const lon1Input = document.getElementById('lon1');
-const lat2Input = document.getElementById('lat2');
-const lon2Input = document.getElementById('lon2');
-const plotButton = document.getElementById('plot-button');
+const pointsContainer = document.getElementById('points-container');
+const addPointButton = document.getElementById('add-point-button');
+const plotRouteButton = document.getElementById('plot-route-button');
 
-let marker1, marker2, curveLine;
+let pointCount = 2;
+
+function createPointInput(index) {
+    const pointGroup = document.createElement('div');
+    pointGroup.className = 'point-group';
+    pointGroup.innerHTML = `
+        <b>Point ${index}</b><br>
+        <label>Lat:</label>
+        <input type="number" class="lat-input" placeholder="e.g., 35.68">
+        <label>Lon:</label>
+        <input type="number" class="lon-input" placeholder="e.g., 139.69">
+        <button class="remove-point-button">Remove</button>
+    `;
+    return pointGroup;
+}
+
+addPointButton.addEventListener('click', () => {
+    pointCount++;
+    const newPointInput = createPointInput(pointCount);
+    pointsContainer.appendChild(newPointInput);
+});
+
+pointsContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-point-button')) {
+        if (pointsContainer.children.length > 2) {
+            e.target.closest('.point-group').remove();
+            // No need to decrement pointCount, as it's just for labeling new points
+        } else {
+            alert("At least two points are required.");
+        }
+    }
+});
+
+let markerGroup = new THREE.Group();
+let curveGroup = new THREE.Group();
+scene.add(markerGroup);
+scene.add(curveGroup);
+
 const R = 2; // Globe radius
 
 function getPositionFromLatLon(lat, lon) {
@@ -56,23 +91,15 @@ function getPositionFromLatLon(lat, lon) {
     return new THREE.Vector3(x, y, z);
 }
 
-function plotPoint(position, isFirstMarker) {
-    let marker = isFirstMarker ? marker1 : marker2;
-    if (!marker) {
-        const markerGeometry = new THREE.SphereGeometry(0.025, 20, 20);
-        const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        marker = new THREE.Mesh(markerGeometry, markerMaterial);
-        if (isFirstMarker) marker1 = marker;
-        else marker2 = marker;
-        scene.add(marker);
-    }
+function plotPoint(position) {
+    const markerGeometry = new THREE.SphereGeometry(0.025, 20, 20);
+    const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const marker = new THREE.Mesh(markerGeometry, markerMaterial);
     marker.position.copy(position);
+    markerGroup.add(marker);
 }
 
 function drawCurve(p1, p2) {
-    if (curveLine) {
-        scene.remove(curveLine);
-    }
     const midpoint = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
     midpoint.normalize().multiplyScalar(R * 1.1);
 
@@ -80,27 +107,36 @@ function drawCurve(p1, p2) {
     const points = curve.getPoints(50);
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     const material = new THREE.LineBasicMaterial({ color: 0x00aaff, linewidth: 2 });
-    curveLine = new THREE.Line(geometry, material);
-    scene.add(curveLine);
+    const curveLine = new THREE.Line(geometry, material);
+    curveGroup.add(curveLine);
 }
 
-plotButton.addEventListener('click', () => {
-    const lat1 = parseFloat(lat1Input.value);
-    const lon1 = parseFloat(lon1Input.value);
-    const lat2 = parseFloat(lat2Input.value);
-    const lon2 = parseFloat(lon2Input.value);
+plotRouteButton.addEventListener('click', () => {
+    // Clear previous route
+    markerGroup.clear();
+    curveGroup.clear();
 
-    if ([lat1, lon1, lat2, lon2].some(isNaN)) {
-        alert("Please enter valid coordinates for both points.");
+    const pointGroups = pointsContainer.querySelectorAll('.point-group');
+    const positions = [];
+
+    pointGroups.forEach(group => {
+        const lat = parseFloat(group.querySelector('.lat-input').value);
+        const lon = parseFloat(group.querySelector('.lon-input').value);
+        if (!isNaN(lat) && !isNaN(lon)) {
+            positions.push(getPositionFromLatLon(lat, lon));
+        }
+    });
+
+    if (positions.length < 2) {
+        alert("Please enter at least two valid points.");
         return;
     }
 
-    const pos1 = getPositionFromLatLon(lat1, lon1);
-    const pos2 = getPositionFromLatLon(lat2, lon2);
-
-    plotPoint(pos1, true);
-    plotPoint(pos2, false);
-    drawCurve(pos1, pos2);
+    // Plot markers and curves
+    positions.forEach(pos => plotPoint(pos));
+    for (let i = 0; i < positions.length - 1; i++) {
+        drawCurve(positions[i], positions[i+1]);
+    }
 });
 
 
