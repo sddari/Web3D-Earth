@@ -24,17 +24,10 @@
 </head>
 <body>
     <div id="ui">
-        <b>Point 1</b><br>
-        <label for="lat1">Latitude:</label>
-        <input type="number" id="lat1" placeholder="e.g., 40.71" value="40.71"><br>
-        <label for="lon1">Longitude:</label>
-        <input type="number" id="lon1" placeholder="e.g., -74.00" value="-74.00"><br>
-        <b>Point 2</b><br>
-        <label for="lat2">Latitude:</label>
-        <input type="number" id="lat2" placeholder="e.g., 34.05" value="34.05"><br>
-        <label for="lon2">Longitude:</label>
-        <input type="number" id="lon2" placeholder="e.g., -118.24" value="-118.24"><br>
-        <button id="plot-button">Plot Curve</button>
+        <label for="url-input">Enter a web address:</label>
+        <input type="text" id="url-input" placeholder="e.g., google.com" value="google.com">
+        <button id="trace-button">Trace Route</button>
+        <p id="info-text" style="font-size: 12px;"></p>
     </div>
 
     <script type="importmap">
