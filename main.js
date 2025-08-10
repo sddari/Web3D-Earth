@@ -37,10 +37,12 @@ scene.add(directionalLight);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// --- Trace Route Logic ---
-const urlInput = document.getElementById('url-input');
-const traceButton = document.getElementById('trace-button');
-const infoText = document.getElementById('info-text');
+// --- Plotting Logic ---
+const lat1Input = document.getElementById('lat1');
+const lon1Input = document.getElementById('lon1');
+const lat2Input = document.getElementById('lat2');
+const lon2Input = document.getElementById('lon2');
+const plotButton = document.getElementById('plot-button');
 
 let marker1, marker2, curveLine;
 const R = 2; // Globe radius
@@ -54,13 +56,13 @@ function getPositionFromLatLon(lat, lon) {
     return new THREE.Vector3(x, y, z);
 }
 
-function plotPoint(position, isUserMarker) {
-    let marker = isUserMarker ? marker1 : marker2;
+function plotPoint(position, isFirstMarker) {
+    let marker = isFirstMarker ? marker1 : marker2;
     if (!marker) {
         const markerGeometry = new THREE.SphereGeometry(0.025, 20, 20);
-        const markerMaterial = new THREE.MeshBasicMaterial({ color: isUserMarker ? 0x00ff00 : 0xff0000 }); // Green for user, Red for server
+        const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         marker = new THREE.Mesh(markerGeometry, markerMaterial);
-        if (isUserMarker) marker1 = marker;
+        if (isFirstMarker) marker1 = marker;
         else marker2 = marker;
         scene.add(marker);
     }
@@ -82,64 +84,23 @@ function drawCurve(p1, p2) {
     scene.add(curveLine);
 }
 
-async function getUserLocation() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject(new Error('Geolocation is not supported by your browser'));
-        } else {
-            navigator.geolocation.getCurrentPosition(
-                (position) => resolve(position.coords),
-                () => reject(new Error('Unable to retrieve your location'))
-            );
-        }
-    });
-}
+plotButton.addEventListener('click', () => {
+    const lat1 = parseFloat(lat1Input.value);
+    const lon1 = parseFloat(lon1Input.value);
+    const lat2 = parseFloat(lat2Input.value);
+    const lon2 = parseFloat(lon2Input.value);
 
-async function getServerLocation(domain) {
-    try {
-        // Remove protocol and paths from domain
-        const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-        const response = await fetch(`http://ip-api.com/json/${cleanDomain}`);
-        if (!response.ok) {
-            throw new Error('Server location API request failed');
-        }
-        const data = await response.json();
-        if (data.status === 'fail') {
-            throw new Error(`Could not locate server: ${data.message}`);
-        }
-        return { latitude: data.lat, longitude: data.lon };
-    } catch (error) {
-        throw new Error(`Failed to fetch server location: ${error.message}`);
-    }
-}
-
-traceButton.addEventListener('click', async () => {
-    infoText.textContent = 'Tracing route...';
-    const domain = urlInput.value;
-    if (!domain) {
-        infoText.textContent = 'Please enter a web address.';
+    if ([lat1, lon1, lat2, lon2].some(isNaN)) {
+        alert("Please enter valid coordinates for both points.");
         return;
     }
 
-    try {
-        const [userCoords, serverCoords] = await Promise.all([
-            getUserLocation(),
-            getServerLocation(domain)
-        ]);
+    const pos1 = getPositionFromLatLon(lat1, lon1);
+    const pos2 = getPositionFromLatLon(lat2, lon2);
 
-        infoText.textContent = `Route traced from your location to ${domain}'s server.`;
-
-        const userPos = getPositionFromLatLon(userCoords.latitude, userCoords.longitude);
-        const serverPos = getPositionFromLatLon(serverCoords.latitude, serverCoords.longitude);
-
-        plotPoint(userPos, true); // true for user marker (green)
-        plotPoint(serverPos, false); // false for server marker (red)
-        drawCurve(userPos, serverPos);
-
-    } catch (error) {
-        infoText.textContent = `Error: ${error.message}`;
-        alert(`Error: ${error.message}`);
-    }
+    plotPoint(pos1, true);
+    plotPoint(pos2, false);
+    drawCurve(pos1, pos2);
 });
 
 
