@@ -111,6 +111,23 @@ function drawCurve(p1, p2) {
     curveGroup.add(curveLine);
 }
 
+function fitCameraToObject(object, padding = 1.5) {
+    const box = new THREE.Box3().setFromObject(object);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const fov = camera.fov * (Math.PI / 180);
+    const cameraDistance = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+
+    const direction = center.clone().normalize();
+    const newPosition = center.clone().add(direction.multiplyScalar(cameraDistance * padding));
+
+    camera.position.copy(newPosition);
+    controls.target.copy(center);
+    controls.update();
+}
+
 plotRouteButton.addEventListener('click', () => {
     // Clear previous route
     markerGroup.clear();
@@ -137,6 +154,9 @@ plotRouteButton.addEventListener('click', () => {
     for (let i = 0; i < positions.length - 1; i++) {
         drawCurve(positions[i], positions[i+1]);
     }
+
+    // Adjust camera to fit the route
+    fitCameraToObject(markerGroup);
 });
 
 
