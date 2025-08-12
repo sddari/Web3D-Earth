@@ -160,6 +160,71 @@ plotRouteButton.addEventListener('click', () => {
 });
 
 
+// --- Hover/Tooltip Logic ---
+const tooltip = document.getElementById('tooltip');
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+let lastApiCall = 0;
+const throttlePeriod = 1000; // 1 second
+let currentHover = { lat: 0, lon: 0 };
+
+function getLatLonFrom3D(point) {
+    const R = 2; // Globe radius
+    const latRad = Math.asin(point.y / R);
+    const lonRad = Math.atan2(point.z, point.x);
+
+    const lat = latRad * (180 / Math.PI);
+    const lon = -lonRad * (180 / Math.PI); // Negate to match our conversion
+    return { lat, lon };
+}
+
+async function getCountryFromLatLon(lat, lon) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        if (!response.ok) return 'N/A';
+        const data = await response.json();
+        return data.address?.country || 'N/A';
+    } catch (error) {
+        return 'N/A';
+    }
+}
+
+window.addEventListener('mousemove', (event) => {
+    // Normalize mouse position
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(sphere);
+
+    if (intersects.length > 0) {
+        tooltip.style.display = 'block';
+        tooltip.style.left = `${event.clientX + 10}px`;
+        tooltip.style.top = `${event.clientY + 10}px`;
+
+        const intersectionPoint = intersects[0].point;
+        const { lat, lon } = getLatLonFrom3D(intersectionPoint);
+        currentHover = { lat, lon };
+
+        tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: Loading...`;
+
+        const now = Date.now();
+        if (now - lastApiCall > throttlePeriod) {
+            lastApiCall = now;
+            getCountryFromLatLon(lat, lon).then(country => {
+                // Only update if the mouse is still hovering over the same approximate location
+                if (Math.abs(lat - currentHover.lat) < 0.5 && Math.abs(lon - currentHover.lon) < 0.5) {
+                    tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: ${country}`;
+                }
+            });
+        }
+    } else {
+        tooltip.style.display = 'none';
+    }
+});
+
+
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);

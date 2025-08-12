@@ -25,9 +25,21 @@
             padding-bottom: 5px;
             margin-bottom: 5px;
         }
+        #tooltip {
+            position: absolute;
+            display: none;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 3px;
+            padding: 5px;
+            color: white;
+            font-family: sans-serif;
+            font-size: 12px;
+            pointer-events: none; /* So it doesn't interfere with mouse events on the canvas */
+        }
     </style>
 </head>
 <body>
+    <div id="tooltip"></div>
     <div id="ui">
         <div id="points-container">
             <div class="point-group">
