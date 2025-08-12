@@ -207,16 +207,12 @@ window.addEventListener('mousemove', (event) => {
         const { lat, lon } = getLatLonFrom3D(intersectionPoint);
         currentHover = { lat, lon };
 
-        tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: Loading...`;
-
         const now = Date.now();
         if (now - lastApiCall > throttlePeriod) {
-            lastApiCall = now;
-            getCountryFromLatLon(lat, lon).then(country => {
-                // Only update if the mouse is still hovering over the same approximate location
-                if (Math.abs(lat - currentHover.lat) < 0.5 && Math.abs(lon - currentHover.lon) < 0.5) {
-                    tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: ${country}`;
-                }
+            lastApiCall = now;            
+        		tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: Loading...`;			
+			      getCountryFromLatLon(lat, lon).then(country => {				
+				      tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: ${country}`;		
             });
         }
     } else {
