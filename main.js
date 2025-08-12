@@ -181,10 +181,10 @@ function getLatLonFrom3D(point) {
 
 async function getCountryFromLatLon(lat, lon) {
     try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
         if (!response.ok) return 'N/A';
         const data = await response.json();
-        return data.address?.country || 'N/A';
+        return data.countryName || 'N/A';
     } catch (error) {
         return 'N/A';
     }
