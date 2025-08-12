@@ -210,10 +210,10 @@ window.addEventListener('mousemove', (event) => {
         const now = Date.now();
         if (now - lastApiCall > throttlePeriod) {
             lastApiCall = now;            
-        		tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: Loading...`;			
-			      getCountryFromLatLon(lat, lon).then(country => {				
-				      tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: ${country}`;		
-            });
+        	tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: Loading...`;
+			getCountryFromLatLon(lat, lon).then(country => {				
+				tooltip.innerHTML = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}<br>Country: ${country}`;
+			});
         }
     } else {
         tooltip.style.display = 'none';
